@@ -11,14 +11,14 @@ Corresponding code to the paper "Active Fuzzing for Testing and Securing Cyber-P
 
 ## Software
 python 2.7.16  
-matplotlib 2.2.4  
-netfilter 0.6.4  
-numpy 1.16.2  
-pandas 0.24.1  
-pyzmq 18.0.1  
-scapy 2.4.2  
-scikit-learn 0.20.3  
-tcpdump 4.9.2  
+matplotlib 2.2.4 (https://matplotlib.org/) 
+netfilter 0.6.4 (https://www.netfilter.org/)
+numpy 1.16.2  (https://numpy.org/)
+pandas 0.24.1 (https://pandas.pydata.org/)
+pyzmq 18.0.1  (https://pyzmq.readthedocs.io/en/latest/)
+scapy 2.4.2 (https://scapy.net/)  
+scikit-learn 0.20.3 (https://scikit-learn.org/)
+tcpdump 4.9.2  (https://www.tcpdump.org/manpages/tcpdump.1.html)
 # Setup
 
 1. Physically connect the Raspberry Pis to all PLCs in level0. (USB Ethernet adaptors are used here since Raspberry Pis typically has only one ethernet port.) 
