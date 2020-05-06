@@ -5,12 +5,9 @@
 # !/usr/bin/env python
 # -*- coding:utf-8 -*-
 from scapy.all import *
-import random
 import time
 import numpy as np
-from bitdump import *
-import binascii
-from modify_bit import *
+from Main.modify_bit import *
 from netfilterqueue import NetfilterQueue
 
 

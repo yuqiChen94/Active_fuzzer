@@ -4,7 +4,7 @@ import time
 import zmq
 import numpy as np
 
-ip = "10.0.1.234"
+ip = "10.0.1.235"
 port = "5501"
 
 tcp_address = "tcp://" + ip + ":" + port

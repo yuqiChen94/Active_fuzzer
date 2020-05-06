@@ -2,26 +2,21 @@
 # -*- coding:utf-8 -*-
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
 # !/usr/bin/env python
 # -*- coding:utf-8 -*-
 from scapy.all import *
-import random
 import time
 import numpy as np
-from bitdump import *
-import binascii
-from modify_bit import *
+from Main.modify_bit import *
 from netfilterqueue import NetfilterQueue
-from sklearn.externals import joblib
 
-
-index_alter = 0
-#stage1_index
-index2_50 = [74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 97, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 186, 187, 188, 189, 190, 191, 192, 193, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 221, 222, 223, 224, 225, 239, 240, 241, 253, 254, 255, 256, 257, 269, 270, 271, 272, 273, 302, 303, 304, 305, 318, 319, 320, 321, 334, 335, 336, 337, 350, 351, 352, 353, 367, 368, 369, 384]
+#stage4_index
+index2_50 = [74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 97, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 186, 187, 188, 189, 190, 191, 192, 193, 196, 197, 198, 199, 200, 201, 205, 206, 207, 208, 209, 218, 219, 220, 221, 222, 223, 224, 225, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 247, 248, 249, 269, 270, 271, 272, 273, 285, 286, 287, 288, 289, 302, 303, 304, 305, 317, 318, 319, 320, 321, 334, 335, 336, 337, 349, 350, 351, 352, 353, 365, 366, 367, 368, 369]
 index2_40 = [74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 95, 96, 97]
-index2_28 = [74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 95, 96, 97, 142, 143, 144, 145, 190, 200, 201]
-index0_40 = [74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 95, 96, 97, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 206, 207, 209, 217]
-
+index2_28 = [74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 95, 96, 97, 140, 141, 142, 143, 144, 145, 190, 194]
+index0_40 = [74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 95, 96, 97, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 205, 209, 215]
 
 p2_50 = np.zeros(len(index2_50), dtype=int)
 p2_40 = np.zeros(len(index2_40), dtype=int)
@@ -37,8 +32,7 @@ failed_times = 0
 count = 0
 start_time = 0
 time_interval = 30
-flag = 0
-temp_pkt = 0
+
 
 def handle_packet(packet):
     global index_alter
@@ -48,45 +42,41 @@ def handle_packet(packet):
     global vector
     global start_time
     global model
-    global temp_pkt
-    global flag
-    #184:pump1_start
-    index_alter = 184
-    #183:valve_open
-    index_alter2 = 183
+    #191:pump1_start
+    index_alter = 191
+    #190:UV_start
+    index_alter2 = 190
     pkt = IP(packet.get_payload())
     if pkt.haslayer('Raw'):
         if index_alter in range(len(p2_50)):
-            if pkt['IP'].src == '192.168.0.12' and len(pkt['Raw']) == 50:
-                rawpkt = binascii.unhexlify(flip(pkt, index2_50[index_alter]))
+            if pkt['IP'].src == '192.168.0.42' and len(pkt['Raw']) == 50:
+                rawpkt = binascii.unhexlify(on(pkt, index2_50[index_alter]))
                 pktnew = IP(rawpkt)
                 del pktnew['IP'].chksum
                 del pktnew['UDP'].chksum
                 packet.set_payload(str(pktnew))
         elif index_alter in range(len(p2_50), len(p2_50)+len(p2_40)):
-            if pkt['IP'].src == '192.168.0.12' and len(pkt['Raw']) == 40:
-                rawpkt = binascii.unhexlify(flip(pkt, index2_40[index_alter - len(p2_50)]))
+            if pkt['IP'].src == '192.168.0.42' and len(pkt['Raw']) == 40:
+                rawpkt = binascii.unhexlify(on(pkt, index2_40[index_alter - len(p2_50)]))
                 pktnew = IP(rawpkt)
                 del pktnew['IP'].chksum
                 del pktnew['UDP'].chksum
                 packet.set_payload(str(pktnew))
         elif index_alter in range(len(p2_50)+len(p2_40), len(p2_50)+len(p2_40)+len(p2_28)):
-            if pkt['IP'].src == '192.168.0.12' and len(pkt['Raw']) == 28:
-                rawpkt = binascii.unhexlify(flip(pkt, index2_28[index_alter - (len(p2_50)+len(p2_40))]))
+            if pkt['IP'].src == '192.168.0.42' and len(pkt['Raw']) == 28:
+                rawpkt = binascii.unhexlify(on(pkt, index2_28[index_alter - (len(p2_50)+len(p2_40))]))
                 pktnew = IP(rawpkt)
                 del pktnew['IP'].chksum
                 del pktnew['UDP'].chksum
                 packet.set_payload(str(pktnew))
         elif index_alter in range(len(p2_50)+len(p2_40)+len(p2_28), len(p2_50)+len(p2_40)+len(p2_28)+len(p0_40)):
-            if pkt['IP'].src == '192.168.0.10' and len(pkt['Raw']) == 40:
-                #control pump101 states 
-                rawpkt = binascii.unhexlify(off(pkt, index0_40[index_alter - (len(p2_50)+len(p2_40)+len(p2_28))]))
+            if pkt['IP'].src == '192.168.0.40' and len(pkt['Raw']) == 40:
+                #control pump401 states
+                rawpkt = binascii.unhexlify(on(pkt, index0_40[index_alter - (len(p2_50)+len(p2_40)+len(p2_28))]))
                 pktnew = IP(rawpkt)
-                '''
-                #control mv101 states
-                rawpkt = binascii.unhexlify(off(pkt, index0_40[index_alter2 - (len(p2_50)+len(p2_40)+len(p2_28))]))
-                pktnew = IP(rawpkt)
-                '''
+                #control UV states
+                rawpkt = binascii.unhexlify(on(pktnew, index0_40[index_alter2 - (len(p2_50)+len(p2_40)+len(p2_28))]))
+                pktnew = IP(rawpkt)                
                 del pktnew['IP'].chksum
                 del pktnew['UDP'].chksum
                 packet.set_payload(str(pktnew))

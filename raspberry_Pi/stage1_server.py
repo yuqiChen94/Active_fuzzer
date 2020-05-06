@@ -17,6 +17,6 @@ socket.bind(tcp_address)
 
 while True:
     '''send old vector to laptop'''
-    vo = np.loadtxt('stage1old.txt')
+    vo = np.loadtxt('stage2old.txt')
     socket.send_string("%s" % vo)
     time.sleep(1)

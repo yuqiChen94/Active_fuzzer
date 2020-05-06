@@ -4,7 +4,7 @@ Corresponding code to the paper "Active Fuzzing for Testing and Securing Cyber-P
 
 # Requirement
 ## Hardware
-1.Four raspberry Pis with a wireless network adapter and an ethernet adapter  
+1.Four raspberry Pis with a wireless network adapter and an ethernet adapter 
 2.One laptop with a Linux OS  
 3.USB Ethernet adaptors  
 4.Ethernet cable extenders  
@@ -35,11 +35,14 @@ This project contains three modules:
 
 # Usage
 ### Data collection
-For each Raspberry Pi, edit and run script tcpdump.sh to sniff packets in level 0 for different PLC.  
-Collect corresponding sensor value from the dataset in the meantime.  
-Run the script extract_bits.py and extra_log.py to generate the feature vectors and sensor values used for training.  
+1. For each Raspberry Pi, copy the scripts from the fold 'raspberry_Pi' to the corresponding Raspberry Pis.  
+2. Edit the ipadress, port number and file names according to yours.  
+3. Run the script 'raspberry_Pi/tcpdump.sh' to sniff packets in level 0 for different PLC. (You should install the required software for your raspberry and check that bridge works.)  
+4. Collect corresponding sensor values from the dataset in the meantime.  
+5. Edit and run the script 'main/extract_bits.py' and 'main/extra_log.py' to generate the feature vectors and sensor values used for training.  
 ### Active learning
-For each Raspberry Pi, edit and run the corresponding stage_server.py and stage_client.py. In the meantime, run main_client.py and main_server.py on the laptop. These scripts are used to pass all the packets from different PLCs to one laptop.   
-Edit and run active_learning.py to active manipulate and packets and update the model. 
+1. Edit and run script 'main/train.py' to get a pre-training model using the data collected above. 
+2. For each Raspberry Pi, edit and run the corresponding 'stage_server.py' and 'stage_client.py'. In the meantime, edit and run 'main/main_client.py' and 'main/main_server.py' on the laptop. These scripts are used to pass all the packets from different PLCs to one laptop wirelessly.   
+3. 
 ### Attack implications
 ..
