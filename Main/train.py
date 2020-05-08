@@ -2,13 +2,12 @@
 # -*- coding:utf-8 -*-
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.svm import LinearSVR
+from sklearn.svm import SVR
 from sklearn.ensemble import GradientBoostingRegressor
 import matplotlib.pyplot as plt
 from sklearn.externals import joblib
 import time
 from sklearn.metrics import r2_score
-import xgboost as xgb
 
 
 def train_rfr(x, y):
@@ -17,17 +16,10 @@ def train_rfr(x, y):
     return model_rfr
 
 
-def train_linear(x, y):
-    model_linear = LinearSVR(C=1, tol=1e-5,max_iter=1000)
-    model_linear.fit(x, y)
-    return model_linear
-
-
-def train_xgb(x,y):
-    model_xgb = xgb.XGBRegressor(max_depth=10, learning_rate=0.1, n_estimators=100, silent=False)
-    model_xgb.fit(x, y)
-    return model_xgb
-
+def train_SVR(x, y):
+    model_svr = SVR(kernel='linear', C=1, gamma=0.01)
+    model_svr.fit(x, y)
+    return model_svr
 
 def train_gbdt(x, y):
     model_gbdt = GradientBoostingRegressor(
@@ -37,7 +29,7 @@ def train_gbdt(x, y):
         , subsample=0.8
         , min_samples_split=2
         , min_samples_leaf=1
-        , max_depth=10
+        , max_depth=50
         , init=None
         , random_state=None
         , max_features=None
@@ -58,39 +50,56 @@ def predict_once(x, model_once):
     result = model_once.predict(x)
     return result
 
-sensor = 'DPIT301'
-X = np.load(sensor + '_bits_90min.npy')
-y = np.loadtxt(sensor + '_value5_90min.txt')
-# X_test = np.load('LIT401_bits_test.npy')
-# y_test = np.loadtxt('LIT401_diff30_test.txt')
-X_train = X[6000:8400]
-y_train = y[6000:8400]
-X_test = X[:4000]
-y_test = y[:4000]
-print 'complete loading data'
-model = train_linear(X_train,y_train)
-joblib.dump(model,sensor+'_linear_90min.pkl')
-# model = train_gbdt(X_train,y_train)
-# joblib.dump(model,sensor+'_GBDT_90min.pkl')
-print 'complete training'
-prediction = model.predict(X_test)
-print 'model_score', r2_score(y_test,prediction)
 
-# sensor = 'FIT401'
-# method = 'GBDT'
-# time_list = ['40']
-# X = np.load('vector/0718total.npy')[2000:]
-# y = np.loadtxt('vector/0718'+sensor+'_value5.txt')[2000:]
-# for i in range(6):
-#     X_train = X[:60*int(time_list[i])]
-#     print len(X_train)
-#     y_train = y[:60*int(time_list[i])]
-#     if method == 'GBDT':
-#         model = train_gbdt(X_train,y_train)
-#     if method == 'linear':
-#         model = train_linear(X_train, y_train)
-#     joblib.dump(model,'model/'+sensor+'/'+sensor+'_'+method+'_'+time_list[i]+'min.pkl')
-# y_predict = []
+# X_t = np.loadtxt('vector/0429LIT101_corr_bits.txt')
+# y_t = np.loadtxt('vector/0429LIT101_y_diff30.txt')
+
+a = time.time()
+X_train = np.loadtxt('vector/0718train.txt')
+X_test = np.loadtxt('vector/0718test.txt')
+print (len(X_train))
+y_train = np.loadtxt('vector/0718LIT101_train.txt')
+y_test = np.loadtxt('vector/0718LIT101_test.txt')
+print 'load time:',time.time()-a
+
+#
+# X = np.loadtxt('vector/0710stage1_whole.txt')
+# y = np.loadtxt('vector/0710LIT101_y_diff30.txt')
+# X_train, X_test = split_data(X)
+# np.savetxt('vector/0710stage1_train.txt',X_train)
+# y_train, y_test = split_data(y)
+# np.savetxt('vector/0710LIT101_diff30_train.txt',y_train)
+# np.savetxt('stage4test0.txt',X_test,fmt='%d')
+# np.savetxt('LIT401test0.txt',y_test)
+# np.savetxt('stage4_batch0.txt',X_train,fmt='%d')
+# np.savetxt('LIT401_batch0.txt',y_train)
+
+'''real value'''
+# y_real = np.loadtxt('vector/0703LIT301_y_diff30.txt')
+# y_realtrain, y_realtest = split_data(y_real)
+# X_test = X[8000:]
+# y_test = y[8000:]
+# for i in range(3,6):
+
+
+# for j in range(6):
+#     model = train_SVR(X[1800:1800+(j+1)*600], y[1800:1800+(j+1)*600])
+#     plt.figure()
+#     plt.plot(range(len(y[1800:1800+(j+1)*600])),y[1800:1800+(j+1)*600], 'b', label='real_train')
+#     plt.legend()
+#     plt.show()
+#     predict_y = model.predict(X_test)
+#     print j,r2_score(y_test,predict_y)
+#     plt.figure()
+#     plt.plot(range(len(y_test)), y_test, 'b', label='real_test')
+#     plt.plot(range(len(y_test)), predict_y, 'r', label='predict_test')
+#     plt.legend()
+#     plt.show()
+
+model = train_SVR(X_train,y_train)
+joblib.dump(model, "model/0718LIT101_diff30_linear.pkl")
+
+y_predict = []
 
 '''predict based on difference'''
 '''diff_train'''
@@ -131,9 +140,23 @@ print 'model_score', r2_score(y_test,prediction)
 # plt.show()
 
 '''predict directly'''
+a = model.predict(X_test)
+plt.figure()
+plt.plot(range(len(y_test)),y_test,'b',label = 'real_test')
+plt.plot(range(len(y_test)),a,'r',label = 'predict_test')
+plt.legend()
+plt.show()
 # plt.figure()
 # plt.plot(range(len(y_test)),y_test,'b',label = 'real_test')
-# plt.plot(range(len(y_test)),prediction,'r',label = 'predict_test')
-# #plt.text(900,5,'r2_score='+str(float('%.4f' % mean[0])),size=15,alpha=1.0,color='g')
 # plt.legend()
 # plt.show()
+# plt.figure()
+# plt.plot(range(len(y_train)),y_train,'b',label = 'real_train')
+# plt.legend()
+# plt.show()
+# b = model.predict(X_train)
+# plt.figure()
+# plt.plot(range(len(y_train)), y_train, 'b', label='real_train')
+# plt.plot(range(len(y_train)), b, 'r', label='predict_train')
+# plt.legend()
+# plt.savefig("figure/LIT101_value20_rfr.png")

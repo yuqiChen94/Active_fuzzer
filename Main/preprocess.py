@@ -1,11 +1,17 @@
 from __future__ import division
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.svm import SVR
+from sklearn.svm import LinearSVR
 import numpy as np
 from sklearn.externals import joblib
 import matplotlib.pyplot as plt
 import random
 import math
+import time
+
+def train_linear(x, y):
+    model_linear = LinearSVR(C=1, tol = 1e-5)
+    model_linear.fit(x, y)
+    return model_linear
 
 
 def train_gbdt(x, y):
@@ -16,7 +22,7 @@ def train_gbdt(x, y):
         , subsample=0.8
         , min_samples_split=2
         , min_samples_leaf=1
-        , max_depth=7
+        , max_depth=10
         , init=None
         , random_state=None
         , max_features=None
@@ -27,7 +33,6 @@ def train_gbdt(x, y):
     )
     model_gbdt.fit(x, y)
     return model_gbdt
-
 
 
 def bootstrap_con(X,y,block_size):
@@ -57,11 +62,12 @@ def bootstrap_linear_model(X,y,block_size,num):
     model_list=[]
     for i in range(num):
         new_X, new_y = bootstrap_con(X, y, block_size)
-        model = SVR(kernel='linear', C=0.01, gamma=0.001)
+        model = train_linear(new_X,new_y)
         model.fit(new_X, new_y)
         model_list.append("model/bootstrap_linear_example"+str(i)+".pkl")
         joblib.dump(model,model_list[i])
     return model_list
+
 
 def bootstrap_GBDT_model(X,y,block_size,num):
     model_list=[]
@@ -72,8 +78,10 @@ def bootstrap_GBDT_model(X,y,block_size,num):
         joblib.dump(model,model_list[i])
     return model_list
 
+
 def EMCM_linear(model,num_bootstrap,model_list,search_times,vector):
     v_list=[]
+    vector_list = []
     for i in range(search_times):
         v=0
         for k in range(num_bootstrap):
@@ -85,7 +93,6 @@ def EMCM_linear(model,num_bootstrap,model_list,search_times,vector):
     temp_list = v_list[:]
     temp_list.sort(reverse=True)
     #top 10 vector in all modified vectors
-    vector_list = []
     for i in range(10):
         vector_list.append(vector[v_list.index(temp_list[i])])
     return vector_list
@@ -93,6 +100,7 @@ def EMCM_linear(model,num_bootstrap,model_list,search_times,vector):
 
 def EMCM_GBDT(model,num_bootstrap,model_list,search_times,vector,num_estimators):
     v_list=[]
+    vector_list = []
     for i in range(search_times):
         v=0
         v_tree = np.zeros(num_estimators)
@@ -107,25 +115,27 @@ def EMCM_GBDT(model,num_bootstrap,model_list,search_times,vector,num_estimators)
     temp_list = v_list[:]
     temp_list.sort(reverse=True)
     #top 10 vector in all modified vectors
-    vector_list = []
     for i in range(10):
         vector_list.append(vector[v_list.index(temp_list[i])])
     return vector_list
 
 
+    #How to construct vector?
 if __name__ == '__main__':
     # block_size=int(np.shape(X)[0]**(1/3))+1
-    model = joblib.load('model/test.pkl')
+    # model = joblib.load('model/0718LIT101_diff30_linear.pkl')
+    X_test = np.loadtxt('vector/0718train.txt')
+    y_test = np.loadtxt('vector/0718LIT101_train.txt')
+    block_size=int(np.shape(X_test)[0]**(1/3))+1
+    # bootstrap_linear_model(X_test,y_test,block_size,4)
+    # bootstrap_GBDT_model(X_test,y_test,block_size,4)
+    vector = X_test[:2400]
+    method = 'GBDT'
+    model = joblib.load('model/LIT101_'+method+'0.pkl')
+    model_list = ['model/bootstrap_'+method+'_example0.pkl', 'model/bootstrap_'+method+'_example1.pkl', 'model/bootstrap_'+method+'_example2.pkl',
+                  'model/bootstrap_'+method+'_example3.pkl']
+    a = time.time()
+    vector_list = EMCM_GBDT(model,4,model_list,len(vector),vector,100)
+    print time.time()-a
+    print vector_list
 
-    # X_test = np.loadtxt('vector/x.txt')
-    # y_test = np.loadtxt('vector/y.txt')
-
-    X_test = np.loadtxt('vector/stage1_batch0.txt')
-    y_test = np.loadtxt('vector/LIT101_batch0.txt')
-    # block_size=int(np.shape(X_test)[0]**(1/3))+1
-    # bootstrap_model(X_test,y_test,block_size,4)
-    # a=model.predict(X_test[0].reshape(1, -1))
-
-    vector=[3,2,1]
-
-    print vector.index(max(vector))

@@ -3,6 +3,11 @@ from scapy.all import *
 import string
 
 
+def list_to_string(vector):
+    temp = [str(x) for x in vector]
+    return ''.join(temp)
+
+
 def modify_bit(pkt1,number):
     flag = 0
     whole = binascii.hexlify(bytes(pkt1))
@@ -48,10 +53,23 @@ def bitdump(x, dump=False):
     return bin(int(s,16)).replace("0b","")
 
 
-
-def list_to_string(vector):
-    temp = [str(x) for x in vector]
-    return ''.join(temp)
+'''scoring function'''
+def search(vector):
+    global model
+    t = 0
+    index_temp = 0
+    y_origin = model.predict([vector])
+    for index in range(len(vector)):
+        temp = vector[:]
+        if temp[index] == 0:
+            temp[index] = 1
+        elif temp[index] == 1:
+            temp[index] = 0
+        y_after = model.predict(temp)
+        if abs(y_after-y_origin) >= t:
+            t = abs(y_after-y_origin)
+            index_temp = index
+    return index_temp
 
 
 def bit_flip(vector,i):
@@ -112,15 +130,14 @@ def reconstruct_packet(pkt,vector,stage_number,packet_index):
     :param packet_index: 12_50:1;12_40:2;12_28:3;10_40:4
     :return:
     '''
-    len_12_50 = 256
-    len_12_40 = 176
-    len_12_28 = 80
-    len_10_40 = 176
-    stage_length = 688
+    len_12_50 = 394
+    len_12_40 = 314
+    len_12_28 = 218
+    len_10_40 = 314
+    stage_length = 1240
     whole = binascii.hexlify(bytes(pkt))
-    print 'whole',whole
     payload = binascii.hexlify(bytes(pkt[Raw]))
-    print 'payload',payload
+    print payload
     temp = string.replace(whole,payload,"")
     stage_vector = vector[(stage_number-1)*stage_length:stage_number*stage_length]
     if packet_index == 1:
@@ -131,10 +148,10 @@ def reconstruct_packet(pkt,vector,stage_number,packet_index):
         packet_vector = stage_vector[len_12_50+len_12_40:len_12_50+len_12_40+len_12_28]
     if packet_index == 4:
         packet_vector = stage_vector[len_12_50+len_12_40+len_12_28:len_12_50+len_12_40+len_12_28+len_10_40]
-    packet_vector = map(int,packet_vector)
     pktnew = list_to_string(packet_vector)
-    pktnew = pktnew
+    pktnew = '000000'+pktnew
     a = time.time()
     pktnew = bin_to_hex(pktnew)
-    print 'payload',pktnew
+    print time.time()-a
+    print pktnew
     return temp+pktnew
